@@ -20,44 +20,48 @@ INSTANCE_ID = os.getenv("HOSTNAME", socket.gethostname())
 
 def seed_data(db: Session):
     """Seed demo data if DB is empty."""
-    if db.query(User).first():
+    existing = db.query(User).filter(User.email == "admin@cloudcrm.dev").first()
+    if existing:
         return
 
-    # Admin user
-    admin = User(
-        email="admin@cloudcrm.dev",
-        hashed_password=get_password_hash("admin123"),
-        full_name="Admin User",
-    )
-    db.add(admin)
-    db.flush()
+    try:
+        # Admin user
+        admin = User(
+            email="admin@cloudcrm.dev",
+            hashed_password=get_password_hash("admin123"),
+            full_name="Admin User",
+        )
+        db.add(admin)
+        db.flush()
 
-    # Customers
-    customers_data = [
-        {"name": "Acme Corp", "email": "contact@acme.com", "company": "Acme Corp", "status": "active", "phone": "+1-555-0101"},
-        {"name": "GlobalTech", "email": "info@globaltech.io", "company": "GlobalTech Inc", "status": "active", "phone": "+1-555-0102"},
-        {"name": "StartupXYZ", "email": "hello@startupxyz.com", "company": "StartupXYZ", "status": "lead", "phone": "+1-555-0103"},
-        {"name": "MegaCorp", "email": "sales@megacorp.net", "company": "MegaCorp Ltd", "status": "churned", "phone": "+1-555-0104"},
-    ]
-    customer_objects = []
-    for c in customers_data:
-        cust = Customer(**c)
-        db.add(cust)
-        customer_objects.append(cust)
-    db.flush()
+        # Customers
+        customers_data = [
+            {"name": "Acme Corp", "email": "contact@acme.com", "company": "Acme Corp", "status": "active", "phone": "+1-555-0101"},
+            {"name": "GlobalTech", "email": "info@globaltech.io", "company": "GlobalTech Inc", "status": "active", "phone": "+1-555-0102"},
+            {"name": "StartupXYZ", "email": "hello@startupxyz.com", "company": "StartupXYZ", "status": "lead", "phone": "+1-555-0103"},
+            {"name": "MegaCorp", "email": "sales@megacorp.net", "company": "MegaCorp Ltd", "status": "churned", "phone": "+1-555-0104"},
+        ]
+        customer_objects = []
+        for c in customers_data:
+            cust = Customer(**c)
+            db.add(cust)
+            customer_objects.append(cust)
+        db.flush()
 
-    # Deals
-    deals_data = [
-        {"title": "Enterprise License", "value": 50000.0, "stage": "won", "customer_id": customer_objects[0].id},
-        {"title": "Cloud Migration", "value": 35000.0, "stage": "proposal", "customer_id": customer_objects[1].id},
-        {"title": "Consulting Package", "value": 15000.0, "stage": "qualified", "customer_id": customer_objects[2].id},
-        {"title": "Support Contract", "value": 8000.0, "stage": "new", "customer_id": customer_objects[0].id},
-        {"title": "Data Analytics", "value": 22000.0, "stage": "lost", "customer_id": customer_objects[3].id},
-    ]
-    for d in deals_data:
-        db.add(Deal(**d))
+        # Deals
+        deals_data = [
+            {"title": "Enterprise License", "value": 50000.0, "stage": "won", "customer_id": customer_objects[0].id},
+            {"title": "Cloud Migration", "value": 35000.0, "stage": "proposal", "customer_id": customer_objects[1].id},
+            {"title": "Consulting Package", "value": 15000.0, "stage": "qualified", "customer_id": customer_objects[2].id},
+            {"title": "Support Contract", "value": 8000.0, "stage": "new", "customer_id": customer_objects[0].id},
+            {"title": "Data Analytics", "value": 22000.0, "stage": "lost", "customer_id": customer_objects[3].id},
+        ]
+        for d in deals_data:
+            db.add(Deal(**d))
 
-    db.commit()
+        db.commit()
+    except Exception:
+        db.rollback()
 
 
 def heartbeat_loop():
