@@ -6,7 +6,7 @@ client = TestClient(app)
 
 
 def get_token():
-    resp = client.post("/api/auth/login", data={"username": "admin@cloudcrm.dev", "password": "admin123"})
+    resp = client.post("/api/auth/login", data={"username": "admin@fotihcrm.uz", "password": "admin123"})
     if resp.status_code == 200:
         return resp.json()["access_token"]
     return None
@@ -19,7 +19,7 @@ def test_health():
 
 
 def test_login():
-    resp = client.post("/api/auth/login", data={"username": "admin@cloudcrm.dev", "password": "admin123"})
+    resp = client.post("/api/auth/login", data={"username": "admin@fotihcrm.uz", "password": "admin123"})
     assert resp.status_code == 200
     assert "access_token" in resp.json()
 

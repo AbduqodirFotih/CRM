@@ -1,27 +1,33 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { Card, Row, Col, Statistic, Segmented, Typography, Space, Tag } from 'antd'
+import { Card, Row, Col, Statistic, Segmented, Typography, Tag } from 'antd'
 import { TeamOutlined, DollarOutlined, RiseOutlined, TrophyOutlined, ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons'
 import { motion } from 'framer-motion'
 import { Line, Column, Pie } from '@ant-design/charts'
 import api from '../api'
 import useThemeStore from '../store/themeStore'
 
-const { Title, Text } = Typography
+const { Title } = Typography
 
-// Generate 1 year of fake daily data
+// Generate 1 year of fake daily data (seeded for consistency)
 function generateYearData() {
   const data = []
   const now = new Date()
+  let seed = 42
+  const rand = () => { seed = (seed * 1664525 + 1013904223) & 0xFFFFFFFF; return (seed >>> 0) / 0xFFFFFFFF }
+
   for (let i = 365; i >= 0; i--) {
     const date = new Date(now)
     date.setDate(date.getDate() - i)
     const dateStr = date.toISOString().split('T')[0]
+    const month = date.getMonth()
+    // seasonal factor — more activity in Q1 and Q4
+    const seasonFactor = (month >= 9 || month <= 2) ? 1.4 : 1.0
     data.push({
       date: dateStr,
-      newCustomers: Math.floor(Math.random() * 8) + 1,
-      revenue: Math.floor(Math.random() * 15000) + 2000,
-      deals: Math.floor(Math.random() * 5) + 1,
-      churned: Math.floor(Math.random() * 3),
+      newCustomers: Math.floor(rand() * 12 * seasonFactor) + 2,
+      revenue: Math.floor(rand() * 25000 * seasonFactor) + 5000,
+      deals: Math.floor(rand() * 8 * seasonFactor) + 1,
+      churned: Math.floor(rand() * 4),
     })
   }
   return data
@@ -31,10 +37,11 @@ function aggregateData(raw, period) {
   if (period === 'daily') return raw.slice(-30)
   if (period === 'weekly') {
     const weeks = []
-    for (let i = 0; i < raw.length; i += 7) {
-      const chunk = raw.slice(i, i + 7)
+    for (let i = raw.length - 1; i >= 0; i -= 7) {
+      const start = Math.max(0, i - 6)
+      const chunk = raw.slice(start, i + 1)
       if (chunk.length === 0) continue
-      weeks.push({
+      weeks.unshift({
         date: chunk[0].date,
         newCustomers: chunk.reduce((s, d) => s + d.newCustomers, 0),
         revenue: chunk.reduce((s, d) => s + d.revenue, 0),
@@ -56,16 +63,16 @@ function aggregateData(raw, period) {
     })
     return Object.values(months)
   }
-  // yearly
+  // yearly — show all as one total
   const total = raw.reduce(
     (acc, d) => ({
-      date: 'Year',
+      date: 'Year Total',
       newCustomers: acc.newCustomers + d.newCustomers,
       revenue: acc.revenue + d.revenue,
       deals: acc.deals + d.deals,
       churned: acc.churned + d.churned,
     }),
-    { date: 'Year', newCustomers: 0, revenue: 0, deals: 0, churned: 0 }
+    { date: 'Year Total', newCustomers: 0, revenue: 0, deals: 0, churned: 0 }
   )
   return [total]
 }
@@ -86,15 +93,57 @@ export default function Dashboard() {
     api.get('/api/dashboard').then((r) => setStats(r.data)).catch(() => {})
   }, [])
 
-  const totalNewCustomers = rawData.reduce((s, d) => s + d.newCustomers, 0)
-  const totalRevenue = rawData.reduce((s, d) => s + d.revenue, 0)
-  const totalDeals = rawData.reduce((s, d) => s + d.deals, 0)
+  // Stat card values depend on the selected period
+  const periodTotals = useMemo(() => {
+    return chartData.reduce(
+      (acc, d) => ({
+        newCustomers: acc.newCustomers + d.newCustomers,
+        revenue: acc.revenue + d.revenue,
+        deals: acc.deals + d.deals,
+        churned: acc.churned + d.churned,
+      }),
+      { newCustomers: 0, revenue: 0, deals: 0, churned: 0 }
+    )
+  }, [chartData])
+
+  // Previous period for comparison
+  const prevPeriodTotals = useMemo(() => {
+    let prevData = []
+    if (period === 'daily') prevData = rawData.slice(-60, -30)
+    else if (period === 'weekly') prevData = rawData.slice(-168, -84)
+    else if (period === 'monthly') {
+      const allMonths = aggregateData(rawData, 'monthly')
+      const half = Math.floor(allMonths.length / 2)
+      prevData = allMonths.slice(0, half)
+    } else {
+      prevData = rawData.slice(0, Math.floor(rawData.length / 2))
+    }
+    return prevData.reduce(
+      (acc, d) => ({
+        newCustomers: acc.newCustomers + (d.newCustomers || 0),
+        revenue: acc.revenue + (d.revenue || 0),
+        deals: acc.deals + (d.deals || 0),
+        churned: acc.churned + (d.churned || 0),
+      }),
+      { newCustomers: 0, revenue: 0, deals: 0, churned: 0 }
+    )
+  }, [rawData, period, chartData])
+
+  const calcChange = (current, previous) => {
+    if (previous === 0) return { text: '+100%', up: true }
+    const pct = ((current - previous) / previous * 100).toFixed(1)
+    return { text: `${pct >= 0 ? '+' : ''}${pct}%`, up: pct >= 0 }
+  }
+
+  const customerChange = calcChange(periodTotals.newCustomers, prevPeriodTotals.newCustomers)
+  const revenueChange = calcChange(periodTotals.revenue, prevPeriodTotals.revenue)
+  const dealsChange = calcChange(periodTotals.deals, prevPeriodTotals.deals)
 
   const statCards = [
-    { title: 'Total Customers', value: stats?.total_customers || totalNewCustomers, icon: <TeamOutlined />, color: '#2563EB', change: '+12.5%', up: true },
-    { title: 'Active Customers', value: stats?.active_customers || Math.floor(totalNewCustomers * 0.6), icon: <RiseOutlined />, color: '#059669', change: '+8.2%', up: true },
-    { title: 'Pipeline Value', value: stats?.pipeline_value || totalRevenue * 0.4, icon: <DollarOutlined />, color: '#7c3aed', prefix: '$', change: '+15.3%', up: true },
-    { title: 'Won Revenue', value: stats?.won_value || totalRevenue * 0.6, icon: <TrophyOutlined />, color: '#ea580c', prefix: '$', change: '+22.1%', up: true },
+    { title: 'New Customers', value: periodTotals.newCustomers, icon: <TeamOutlined />, color: '#2563EB', ...customerChange },
+    { title: 'Active (net)', value: periodTotals.newCustomers - periodTotals.churned, icon: <RiseOutlined />, color: '#059669', ...calcChange(periodTotals.newCustomers - periodTotals.churned, prevPeriodTotals.newCustomers - prevPeriodTotals.churned) },
+    { title: 'Revenue', value: periodTotals.revenue, icon: <DollarOutlined />, color: '#7c3aed', prefix: '$', ...revenueChange },
+    { title: 'Deals Closed', value: periodTotals.deals, icon: <TrophyOutlined />, color: '#ea580c', ...dealsChange },
   ]
 
   const lineConfig = {
@@ -145,12 +194,22 @@ export default function Dashboard() {
     label: { text: 'type', position: 'outside' },
   }
 
+  const periodLabel = { daily: 'Last 30 Days', weekly: 'Last 12 Weeks', monthly: 'Last 12 Months', yearly: 'Full Year' }
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <Title level={3} style={{ margin: 0 }}>Dashboard</Title>
+        <div>
+          <Title level={3} style={{ margin: 0 }}>Dashboard</Title>
+          <span style={{ color: '#64748b', fontSize: 13 }}>{periodLabel[period]}</span>
+        </div>
         <Segmented
-          options={['daily', 'weekly', 'monthly', 'yearly']}
+          options={[
+            { label: 'Daily', value: 'daily' },
+            { label: 'Weekly', value: 'weekly' },
+            { label: 'Monthly', value: 'monthly' },
+            { label: 'Yearly', value: 'yearly' },
+          ]}
           value={period}
           onChange={setPeriod}
         />
@@ -159,7 +218,7 @@ export default function Dashboard() {
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         {statCards.map((card, i) => (
           <Col xs={24} sm={12} lg={6} key={card.title}>
-            <motion.div custom={i} initial="hidden" animate="visible" variants={statCardVariant}>
+            <motion.div custom={i} initial="hidden" animate="visible" variants={statCardVariant} key={period + card.title}>
               <Card hoverable style={{ borderRadius: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <Statistic
@@ -173,7 +232,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <Tag color={card.up ? 'green' : 'red'} style={{ marginTop: 8 }}>
-                  {card.up ? <ArrowUpOutlined /> : <ArrowDownOutlined />} {card.change}
+                  {card.up ? <ArrowUpOutlined /> : <ArrowDownOutlined />} {card.text}
                 </Tag>
               </Card>
             </motion.div>
@@ -185,7 +244,7 @@ export default function Dashboard() {
         <Col xs={24} lg={16}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
             <Card title="Customer Growth" style={{ borderRadius: 12 }}>
-              <Line {...lineConfig} height={280} />
+              <Line {...lineConfig} height={280} key={period + 'line'} />
             </Card>
           </motion.div>
         </Col>
@@ -202,7 +261,7 @@ export default function Dashboard() {
         <Col xs={24}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
             <Card title="Revenue Trend" style={{ borderRadius: 12 }}>
-              <Column {...columnConfig} height={250} />
+              <Column {...columnConfig} height={250} key={period + 'col'} />
             </Card>
           </motion.div>
         </Col>

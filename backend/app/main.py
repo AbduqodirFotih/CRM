@@ -20,26 +20,42 @@ INSTANCE_ID = os.getenv("HOSTNAME", socket.gethostname())
 
 def seed_data(db: Session):
     """Seed demo data if DB is empty."""
-    existing = db.query(User).filter(User.email == "admin@cloudcrm.dev").first()
+    existing = db.query(User).filter(User.email == "admin@fotihcrm.uz").first()
     if existing:
         return
 
     try:
         # Admin user
         admin = User(
-            email="admin@cloudcrm.dev",
+            email="admin@fotihcrm.uz",
             hashed_password=get_password_hash("admin123"),
-            full_name="Admin User",
+            full_name="Abduqodir Fotih",
         )
         db.add(admin)
         db.flush()
 
-        # Customers
+        # Customers (20 ta)
         customers_data = [
-            {"name": "Acme Corp", "email": "contact@acme.com", "company": "Acme Corp", "status": "active", "phone": "+1-555-0101"},
+            {"name": "Acme Corp", "email": "contact@acme.com", "company": "Acme Corporation", "status": "active", "phone": "+1-555-0101"},
             {"name": "GlobalTech", "email": "info@globaltech.io", "company": "GlobalTech Inc", "status": "active", "phone": "+1-555-0102"},
             {"name": "StartupXYZ", "email": "hello@startupxyz.com", "company": "StartupXYZ", "status": "lead", "phone": "+1-555-0103"},
             {"name": "MegaCorp", "email": "sales@megacorp.net", "company": "MegaCorp Ltd", "status": "churned", "phone": "+1-555-0104"},
+            {"name": "TechVision", "email": "info@techvision.com", "company": "TechVision AI", "status": "active", "phone": "+1-555-0105"},
+            {"name": "CloudFirst", "email": "hello@cloudfirst.io", "company": "CloudFirst Solutions", "status": "active", "phone": "+1-555-0106"},
+            {"name": "DataStream", "email": "contact@datastream.dev", "company": "DataStream Analytics", "status": "lead", "phone": "+1-555-0107"},
+            {"name": "NetPulse", "email": "sales@netpulse.com", "company": "NetPulse Networks", "status": "active", "phone": "+1-555-0108"},
+            {"name": "CyberShield", "email": "info@cybershield.io", "company": "CyberShield Security", "status": "active", "phone": "+1-555-0109"},
+            {"name": "SmartOps", "email": "ops@smartops.co", "company": "SmartOps Automation", "status": "lead", "phone": "+1-555-0110"},
+            {"name": "InnoHub", "email": "team@innohub.tech", "company": "InnoHub Technologies", "status": "active", "phone": "+1-555-0111"},
+            {"name": "QuantumLeap", "email": "hello@quantumleap.ai", "company": "QuantumLeap AI", "status": "lead", "phone": "+1-555-0112"},
+            {"name": "EcoTech", "email": "green@ecotech.org", "company": "EcoTech Solutions", "status": "churned", "phone": "+1-555-0113"},
+            {"name": "BlueSky Labs", "email": "lab@bluesky.io", "company": "BlueSky Laboratories", "status": "active", "phone": "+1-555-0114"},
+            {"name": "RapidScale", "email": "scale@rapidscale.com", "company": "RapidScale Cloud", "status": "lead", "phone": "+1-555-0115"},
+            {"name": "DevForge", "email": "forge@devforge.dev", "company": "DevForge Studios", "status": "active", "phone": "+1-555-0116"},
+            {"name": "NexGen", "email": "info@nexgen.co", "company": "NexGen Platforms", "status": "churned", "phone": "+1-555-0117"},
+            {"name": "PeakSoft", "email": "hello@peaksoft.uz", "company": "PeakSoft Academy", "status": "active", "phone": "+998-90-123-4567"},
+            {"name": "SilkRoad Digital", "email": "info@silkroad.digital", "company": "SilkRoad Digital", "status": "lead", "phone": "+998-91-234-5678"},
+            {"name": "Falcon Systems", "email": "sales@falcon.systems", "company": "Falcon Systems Ltd", "status": "active", "phone": "+44-20-7946-0958"},
         ]
         customer_objects = []
         for c in customers_data:
@@ -48,13 +64,23 @@ def seed_data(db: Session):
             customer_objects.append(cust)
         db.flush()
 
-        # Deals
+        # Deals (15 ta)
         deals_data = [
             {"title": "Enterprise License", "value": 50000.0, "stage": "won", "customer_id": customer_objects[0].id},
-            {"title": "Cloud Migration", "value": 35000.0, "stage": "proposal", "customer_id": customer_objects[1].id},
+            {"title": "Cloud Migration Project", "value": 75000.0, "stage": "proposal", "customer_id": customer_objects[1].id},
             {"title": "Consulting Package", "value": 15000.0, "stage": "qualified", "customer_id": customer_objects[2].id},
-            {"title": "Support Contract", "value": 8000.0, "stage": "new", "customer_id": customer_objects[0].id},
-            {"title": "Data Analytics", "value": 22000.0, "stage": "lost", "customer_id": customer_objects[3].id},
+            {"title": "Annual Support Contract", "value": 12000.0, "stage": "new", "customer_id": customer_objects[4].id},
+            {"title": "Data Analytics Platform", "value": 42000.0, "stage": "won", "customer_id": customer_objects[5].id},
+            {"title": "Security Audit", "value": 28000.0, "stage": "won", "customer_id": customer_objects[8].id},
+            {"title": "AI Integration", "value": 95000.0, "stage": "proposal", "customer_id": customer_objects[11].id},
+            {"title": "DevOps Setup", "value": 35000.0, "stage": "qualified", "customer_id": customer_objects[15].id},
+            {"title": "Network Redesign", "value": 60000.0, "stage": "new", "customer_id": customer_objects[7].id},
+            {"title": "Mobile App Development", "value": 85000.0, "stage": "proposal", "customer_id": customer_objects[10].id},
+            {"title": "Cloud Hosting (3yr)", "value": 36000.0, "stage": "won", "customer_id": customer_objects[13].id},
+            {"title": "Training Program", "value": 8500.0, "stage": "qualified", "customer_id": customer_objects[17].id},
+            {"title": "ERP Integration", "value": 120000.0, "stage": "new", "customer_id": customer_objects[19].id},
+            {"title": "Cybersecurity Suite", "value": 55000.0, "stage": "lost", "customer_id": customer_objects[3].id},
+            {"title": "Legacy Migration", "value": 48000.0, "stage": "lost", "customer_id": customer_objects[12].id},
         ]
         for d in deals_data:
             db.add(Deal(**d))
@@ -91,8 +117,15 @@ def heartbeat_loop():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
-    Base.metadata.create_all(bind=engine)
+    # Startup — create tables (safe for concurrent access)
+    import time as _time
+    import random as _random
+    _time.sleep(_random.uniform(0, 1))  # stagger startup to avoid race
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception:
+        pass  # tables already exist from another instance
+    
     db = SessionLocal()
     seed_data(db)
     db.close()
@@ -115,7 +148,7 @@ async def lifespan(app: FastAPI):
         pass
 
 
-app = FastAPI(title="CloudCRM API", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="Fotih CRM API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

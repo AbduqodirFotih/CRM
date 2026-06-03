@@ -1,6 +1,6 @@
-# CloudCRM — Sales Intelligence Platform
+# Fotih CRM — Sales Intelligence Platform
 
-Full-stack CRM with infrastructure management dashboard built for BTEC Unit 6 "Networking in the Cloud".
+Full-stack CRM with cloud architecture dashboard built for BTEC Unit 6 "Networking in the Cloud".
 
 ## Architecture
 
@@ -8,14 +8,14 @@ Full-stack CRM with infrastructure management dashboard built for BTEC Unit 6 "N
 Internet :80
     │
 ┌───▼────┐  public subnet
-│  nginx  │  Vue SPA + /api load balance + /api/control → controller
+│  nginx  │  React SPA + /api load balance
 └───┬────┘
     │ private subnet
-┌───┼──────────────┐
-│ ┌─▼──┐  ┌──────┐ │  ┌────────────┐
-│ │api×N│  │ ctrl │ │  │ PostgreSQL │
-│ └──┬──┘  └──┬──┘ │  └────────────┘
-│    └────────┴────┘│
+┌───┼─────────────┐
+│ ┌─▼──┐          │  ┌────────────┐
+│ │api×N│          │  │ PostgreSQL │
+│ └──┬──┘          │  └────────────┘
+│    └─────────────┘│
 └───────────────────┘
 ```
 
@@ -24,7 +24,7 @@ Internet :80
 | Layer      | Technology |
 |-----------|-----------|
 | Backend   | FastAPI, SQLAlchemy, PostgreSQL, JWT |
-| Frontend  | Vue 3, Vite, Pinia, Chart.js, vis-network |
+| Frontend  | React 18, Ant Design 5, ReactFlow, Chart.js, Framer Motion |
 | Infra     | Docker, Docker Compose, Nginx 1.27 |
 | CI/CD     | GitHub Actions → GHCR → SSH deploy |
 
@@ -36,19 +36,21 @@ docker compose up -d --build --scale api=3
 
 Open http://localhost:8080
 
-**Login:** admin@cloudcrm.dev / admin123
+**Login:** admin@fotihcrm.uz / admin123
 
 ## Features
 
-- **Dashboard** — stat cards, Chart.js bar/doughnut charts
-- **Customers** — CRUD, search, filter by status (lead/active/churned)
-- **Deals** — CRUD, stages (new/qualified/proposal/won/lost)
-- **Infrastructure** — network topology, live instances, scaling controls, autoscaler, load testing
+- **Dashboard** — stat cards with period filters (daily/weekly/monthly/yearly), animated charts, revenue trends
+- **Customers** — CRUD, search, filter by status (20+ demo records)
+- **Deals** — CRUD, stages pipeline (15 demo deals)
+- **Cloud Architecture** — AWS VPC diagrams, CI/CD pipeline flow, Docker architecture, security overview
+- **Dark Mode** — full dark/light theme toggle
+- **Animations** — page transitions, chart animations (Framer Motion)
 
 ## Production Deployment
 
 1. Set GitHub Secrets:
-   - `SERVER_HOST` — 16.171.253.74
+   - `SERVER_HOST` — server IP
    - `SERVER_USER` — ubuntu
    - `SSH_PRIVATE_KEY` — SSH private key
    - `SECRET_KEY` — JWT secret
@@ -56,13 +58,9 @@ Open http://localhost:8080
 
 2. Push to `main` branch — CI/CD auto-deploys
 
-## Infrastructure Controls
+## Author
 
-- Scale up/down (1-6 instances)
-- Autoscaler (RPS-based, cooldown 15s)
-- Load test (50 burst requests)
-- Drain/deregister instances
-- Real-time network topology visualization
+Abduqodir Fotih
 
 ## License
 

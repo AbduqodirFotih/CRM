@@ -59,7 +59,7 @@ export default function AppLayout() {
       >
         <div style={{ padding: '24px 24px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
           <CloudServerOutlined style={{ fontSize: 24, color: '#2563EB' }} />
-          <Text strong style={{ fontSize: 18, color: '#2563EB' }}>CloudCRM</Text>
+          <Text strong style={{ fontSize: 18, color: '#2563EB' }}>Fotih CRM</Text>
         </div>
         <Menu
           mode="inline"

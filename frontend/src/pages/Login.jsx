@@ -44,15 +44,15 @@ export default function Login() {
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <div style={{ textAlign: 'center' }}>
               <CloudServerOutlined style={{ fontSize: 48, color: '#2563EB', marginBottom: 8 }} />
-              <Title level={3} style={{ margin: 0 }}>CloudCRM</Title>
+              <Title level={3} style={{ margin: 0 }}>Fotih CRM</Title>
               <Text type="secondary">Sales Intelligence Platform</Text>
             </div>
 
             {error && <Alert message={error} type="error" showIcon />}
 
-            <Form onFinish={onFinish} layout="vertical" initialValues={{ email: 'admin@cloudcrm.dev', password: 'admin123' }}>
+            <Form onFinish={onFinish} layout="vertical" initialValues={{ email: 'admin@fotihcrm.uz', password: 'admin123' }}>
               <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
-                <Input prefix={<MailOutlined />} placeholder="admin@cloudcrm.dev" size="large" />
+                <Input prefix={<MailOutlined />} placeholder="admin@fotihcrm.uz" size="large" />
               </Form.Item>
               <Form.Item name="password" label="Password" rules={[{ required: true }]}>
                 <Input.Password prefix={<LockOutlined />} placeholder="Password" size="large" />
@@ -65,7 +65,7 @@ export default function Login() {
             </Form>
 
             <Paragraph type="secondary" style={{ textAlign: 'center', fontSize: 12, margin: 0 }}>
-              Demo: admin@cloudcrm.dev / admin123
+              Demo: admin@fotihcrm.uz / admin123
             </Paragraph>
           </Space>
         </Card>
