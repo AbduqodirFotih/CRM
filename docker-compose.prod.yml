@@ -1,0 +1,76 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: crmdb
+      POSTGRES_USER: crmuser
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-crmpass}
+    command: >
+      postgres
+      -c shared_buffers=32MB
+      -c max_connections=50
+      -c work_mem=4MB
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crmuser -d crmdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    mem_limit: 192m
+    networks:
+      - private_net
+    restart: unless-stopped
+
+  api:
+    image: ${IMAGE_PREFIX}-api:latest
+    environment:
+      DATABASE_URL: postgresql://crmuser:${DB_PASSWORD:-crmpass}@db:5432/crmdb
+      SECRET_KEY: ${SECRET_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: 192m
+    networks:
+      - private_net
+    restart: unless-stopped
+
+  controller:
+    image: ${IMAGE_PREFIX}-controller:latest
+    environment:
+      DATABASE_URL: postgresql://crmuser:${DB_PASSWORD:-crmpass}@db:5432/crmdb
+      SECRET_KEY: ${SECRET_KEY}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: 128m
+    networks:
+      - private_net
+    restart: unless-stopped
+
+  nginx:
+    image: ${IMAGE_PREFIX}-nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - api
+      - controller
+    mem_limit: 64m
+    networks:
+      - private_net
+      - public_net
+    restart: unless-stopped
+
+networks:
+  private_net:
+    driver: bridge
+  public_net:
+    driver: bridge
+
+volumes:
+  pgdata:

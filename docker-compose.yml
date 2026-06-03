@@ -1,0 +1,62 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: crmdb
+      POSTGRES_USER: crmuser
+      POSTGRES_PASSWORD: crmpass
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crmuser -d crmdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - private_net
+
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://crmuser:crmpass@db:5432/crmdb
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - private_net
+
+  controller:
+    build: ./controller
+    environment:
+      DATABASE_URL: postgresql://crmuser:crmpass@db:5432/crmdb
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - private_net
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+      - controller
+    networks:
+      - private_net
+      - public_net
+
+networks:
+  private_net:
+    driver: bridge
+  public_net:
+    driver: bridge
+
+volumes:
+  pgdata:
