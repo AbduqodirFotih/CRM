@@ -30,11 +30,6 @@ jobs:
           docker build -t ${{ env.IMAGE_PREFIX }}-api:latest ./backend
           docker push ${{ env.IMAGE_PREFIX }}-api:latest
 
-      - name: Build and push Controller image
-        run: |
-          docker build -t ${{ env.IMAGE_PREFIX }}-controller:latest ./controller
-          docker push ${{ env.IMAGE_PREFIX }}-controller:latest
-
       - name: Build and push Nginx image
         run: |
           docker build -t ${{ env.IMAGE_PREFIX }}-nginx:latest -f nginx/Dockerfile .
@@ -64,17 +59,14 @@ jobs:
           script: |
             cd /opt/crm
 
-            # Login to GHCR
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            # Create .env
             cat > .env << 'ENVFILE'
             IMAGE_PREFIX=${{ env.IMAGE_PREFIX }}
             SECRET_KEY=${{ secrets.SECRET_KEY }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             ENVFILE
 
-            # Deploy
             docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d --scale api=1
+            docker compose -f docker-compose.prod.yml up -d --scale api=2
             docker image prune -f

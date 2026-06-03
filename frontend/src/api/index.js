@@ -18,4 +18,10 @@ api.interceptors.response.use(
   }
 )
 
+// Set token from storage on init
+const token = localStorage.getItem('token')
+if (token) {
+  api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+}
+
 export default api
