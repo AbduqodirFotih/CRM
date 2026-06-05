@@ -198,7 +198,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="page-header-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? 16 : 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 12 : 0, marginBottom: isMobile ? 16 : 24 }}>
         <div>
           <Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>Dashboard</Title>
           <span style={{ color: '#64748b', fontSize: isMobile ? 12 : 13 }}>{periodLabel[period]}</span>

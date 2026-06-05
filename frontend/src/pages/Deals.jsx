@@ -121,7 +121,7 @@ export default function Deals() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <div className="page-header-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? 12 : 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 12 : 0, marginBottom: isMobile ? 12 : 20 }}>
         <Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>Deals</Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={openCreate} block={isMobile}>
           {isMobile ? 'Add' : 'Add Deal'}

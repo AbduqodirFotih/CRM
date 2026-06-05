@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, message, Card } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, PhoneOutlined, MailOutlined, BankOutlined } from '@ant-design/icons'
+import { PlusOutlined, EditOutlined, DeleteOutlined, PhoneOutlined, MailOutlined, BankOutlined } from '@ant-design/icons'
 import { motion, AnimatePresence } from 'framer-motion'
 import api from '../api'
 import useIsMobile from '../hooks/useIsMobile'
@@ -128,7 +128,7 @@ export default function Customers() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <div className="page-header-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? 12 : 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 12 : 0, marginBottom: isMobile ? 12 : 20 }}>
         <Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>Customers</Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={openCreate} block={isMobile}>
           {isMobile ? 'Add' : 'Add Customer'}
@@ -136,7 +136,7 @@ export default function Customers() {
       </div>
 
       <Card style={{ borderRadius: 12, marginBottom: isMobile ? 8 : 16 }}>
-        <div className="filter-row" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row' }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row' }}>
           <Search
             placeholder="Search customers..."
             allowClear

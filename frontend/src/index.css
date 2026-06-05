@@ -37,59 +37,11 @@ body {
 
 /* ========== MOBILE RESPONSIVE ========== */
 
-/* Hide sidebar on mobile, show bottom nav */
 @media (max-width: 768px) {
-  .desktop-sider {
-    display: none !important;
-  }
-
-  .mobile-header {
-    display: flex !important;
-  }
-
-  .mobile-content {
-    margin-left: 0 !important;
-    padding-bottom: 72px !important;
-  }
-
-  /* Bottom navigation */
-  .mobile-bottom-nav {
-    display: flex !important;
-  }
-
-  /* Responsive stat cards */
-  .stat-card-row .ant-col {
-    flex: 0 0 50% !important;
-    max-width: 50% !important;
-  }
-
   /* Responsive tables - horizontal scroll */
   .ant-table-wrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-  }
-
-  /* Page headers */
-  .page-header-mobile {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 12px;
-  }
-
-  .page-header-mobile .ant-btn {
-    width: 100%;
-  }
-
-  /* Login card */
-  .login-card {
-    width: 100% !important;
-    max-width: 400px !important;
-    margin: 16px !important;
-  }
-
-  /* Charts */
-  .ant-card-body .reactflow {
-    min-height: 300px;
   }
 
   /* Segment controls */
@@ -97,22 +49,7 @@ body {
     font-size: 12px;
   }
 
-  /* Filters */
-  .filter-row .ant-space {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .filter-row .ant-space-item {
-    width: 100%;
-  }
-
-  .filter-row .ant-input-search,
-  .filter-row .ant-select {
-    width: 100% !important;
-  }
-
-  /* Tabs */
+  /* Tabs scroll */
   .ant-tabs-nav {
     overflow-x: auto;
     overflow-y: hidden;
@@ -133,7 +70,7 @@ body {
     top: 16px;
     margin: 0 auto;
     max-height: calc(100vh - 32px);
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .ant-modal-body {
@@ -141,55 +78,21 @@ body {
     overflow-y: auto;
   }
 
-  /* Descriptions on mobile */
-  .ant-descriptions-row {
-    display: block;
+  /* Touch-friendly hit targets */
+  .ant-btn {
+    min-height: 36px;
   }
 
-  .ant-descriptions-item {
-    display: block;
-    padding-bottom: 8px !important;
-  }
-
-  /* Dashboard chart cards */
-  .chart-row .ant-col {
-    flex: 0 0 100% !important;
-    max-width: 100% !important;
+  .ant-menu-item {
+    min-height: 44px;
+    line-height: 44px;
   }
 }
 
 /* Extra small phones */
 @media (max-width: 480px) {
-  .stat-card-row .ant-col {
-    flex: 0 0 100% !important;
-    max-width: 100% !important;
-  }
-
-  .login-card {
-    padding: 0 8px !important;
-  }
-}
-
-/* Tablets */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .desktop-sider {
-    width: 200px !important;
-  }
-
-  .desktop-sider .ant-layout-sider-children {
-    width: 200px;
-  }
-
-  .mobile-content {
-    margin-left: 200px !important;
-  }
-}
-
-/* Safe area padding for iPhone notch */
-@supports (padding: env(safe-area-inset-bottom)) {
-  .mobile-bottom-nav {
-    padding-bottom: env(safe-area-inset-bottom);
-    height: calc(60px + env(safe-area-inset-bottom));
+  .ant-segmented {
+    font-size: 11px;
   }
 }
 
@@ -198,40 +101,4 @@ body {
   body {
     overscroll-behavior-y: contain;
   }
-}
-
-/* Touch-friendly hit targets */
-@media (max-width: 768px) {
-  .ant-btn {
-    min-height: 40px;
-  }
-
-  .ant-menu-item {
-    min-height: 44px;
-    line-height: 44px;
-  }
-
-  .ant-table-row {
-    min-height: 48px;
-  }
-}
-
-/* Dark mode mobile bottom nav */
-.dark .mobile-bottom-nav {
-  background: #141414;
-  border-top: 1px solid #303030;
-}
-
-.dark .mobile-bottom-nav .nav-item {
-  color: rgba(255, 255, 255, 0.45);
-}
-
-.dark .mobile-bottom-nav .nav-item.active {
-  color: #2563EB;
-}
-
-/* Light mode mobile bottom nav */
-.mobile-bottom-nav {
-  background: #fff;
-  border-top: 1px solid #f0f0f0;
 }

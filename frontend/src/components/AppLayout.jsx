@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Layout, Menu, Switch, Avatar, Dropdown, Typography, Drawer, Button } from 'antd'
 import {
@@ -30,6 +30,16 @@ export default function AppLayout() {
   const { darkMode, toggleTheme } = useThemeStore()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const isMobile = useIsMobile()
+
+  // Close drawer on route change
+  useEffect(() => {
+    setDrawerOpen(false)
+  }, [location.pathname])
+
+  // Close drawer on resize to desktop
+  useEffect(() => {
+    if (!isMobile) setDrawerOpen(false)
+  }, [isMobile])
 
   const menuItems = [
     { key: '/', icon: <DashboardOutlined />, label: 'Dashboard' },
@@ -64,7 +74,7 @@ export default function AppLayout() {
 
   // Desktop sidebar content
   const siderContent = (
-    <>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '24px 24px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
         <CloudServerOutlined style={{ fontSize: 24, color: '#2563EB' }} />
         <Text strong style={{ fontSize: 18, color: '#2563EB' }}>Fotih CRM</Text>
@@ -74,9 +84,9 @@ export default function AppLayout() {
         selectedKeys={[location.pathname]}
         items={menuItems}
         onClick={({ key }) => handleNavigate(key)}
-        style={{ border: 'none', fontWeight: 500 }}
+        style={{ border: 'none', fontWeight: 500, flex: 1 }}
       />
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 24px', borderTop: darkMode ? '1px solid #303030' : '1px solid #f0f0f0' }}>
+      <div style={{ padding: '16px 24px', borderTop: darkMode ? '1px solid #303030' : '1px solid #f0f0f0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <Text type="secondary" style={{ fontSize: 12 }}>Theme</Text>
           <Switch
@@ -98,7 +108,7 @@ export default function AppLayout() {
           </div>
         </Dropdown>
       </div>
-    </>
+    </div>
   )
 
   return (
@@ -108,7 +118,6 @@ export default function AppLayout() {
         <Sider
           width={260}
           theme={darkMode ? 'dark' : 'light'}
-          className="desktop-sider"
           style={{
             position: 'fixed',
             left: 0,
@@ -129,11 +138,8 @@ export default function AppLayout() {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         width={260}
-        styles={{
-          body: { padding: 0 },
-          header: { display: 'none' },
-        }}
-        className="mobile-drawer"
+        closable={false}
+        styles={{ body: { padding: 0 } }}
       >
         {siderContent}
       </Drawer>
@@ -142,7 +148,6 @@ export default function AppLayout() {
         {/* Mobile Header */}
         {isMobile && (
           <div
-            className="mobile-header"
             style={{
               position: 'sticky',
               top: 0,
@@ -185,19 +190,19 @@ export default function AppLayout() {
         )}
 
         <Content
-          className="mobile-content"
           style={{
             padding: isMobile ? 12 : 24,
-            minHeight: '100vh',
+            minHeight: isMobile ? 'calc(100vh - 132px)' : '100vh',
+            paddingBottom: isMobile ? 80 : 24,
           }}
         >
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
             >
               <Outlet />
             </motion.div>
@@ -208,7 +213,6 @@ export default function AppLayout() {
       {/* Mobile Bottom Navigation */}
       {isMobile && (
         <div
-          className="mobile-bottom-nav"
           style={{
             position: 'fixed',
             bottom: 0,
@@ -219,9 +223,12 @@ export default function AppLayout() {
             alignItems: 'center',
             justifyContent: 'space-around',
             zIndex: 100,
+            background: darkMode ? '#141414' : '#fff',
+            borderTop: darkMode ? '1px solid #303030' : '1px solid #f0f0f0',
             boxShadow: darkMode
               ? '0 -2px 8px rgba(0,0,0,0.3)'
               : '0 -2px 8px rgba(0,0,0,0.06)',
+            paddingBottom: 'env(safe-area-inset-bottom, 0px)',
           }}
         >
           {bottomNavItems.map((item) => {
@@ -229,7 +236,6 @@ export default function AppLayout() {
             return (
               <div
                 key={item.key}
-                className={`nav-item ${isActive ? 'active' : ''}`}
                 onClick={() => handleNavigate(item.key)}
                 style={{
                   display: 'flex',
@@ -241,8 +247,22 @@ export default function AppLayout() {
                   color: isActive ? '#2563EB' : (darkMode ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.45)'),
                   transition: 'color 0.2s',
                   minWidth: 60,
+                  position: 'relative',
+                  WebkitTapHighlightColor: 'transparent',
                 }}
               >
+                {isActive && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      width: 24,
+                      height: 2,
+                      borderRadius: 1,
+                      background: '#2563EB',
+                    }}
+                  />
+                )}
                 <div style={{ fontSize: 20, lineHeight: 1 }}>
                   {item.icon}
                 </div>
@@ -253,20 +273,6 @@ export default function AppLayout() {
                 }}>
                   {item.label}
                 </span>
-                {isActive && (
-                  <motion.div
-                    layoutId="bottomNavIndicator"
-                    style={{
-                      position: 'absolute',
-                      top: 2,
-                      width: 24,
-                      height: 2,
-                      borderRadius: 1,
-                      background: '#2563EB',
-                    }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  />
-                )}
               </div>
             )
           })}
