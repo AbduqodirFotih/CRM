@@ -33,14 +33,15 @@ export default function Login() {
       alignItems: 'center',
       justifyContent: 'center',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      padding: 24
+      padding: 'max(24px, env(safe-area-inset-top)) max(16px) max(24px, env(safe-area-inset-bottom))',
     }}>
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
+        style={{ width: '100%', maxWidth: 400 }}
       >
-        <Card style={{ width: 400, borderRadius: 16, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+        <Card className="login-card" style={{ width: '100%', borderRadius: 16, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <div style={{ textAlign: 'center' }}>
               <CloudServerOutlined style={{ fontSize: 48, color: '#2563EB', marginBottom: 8 }} />

@@ -1,13 +1,66 @@
 import React, { useState, useEffect } from 'react'
-import { Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, message, Card, Input as AntInput } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons'
-import { motion } from 'framer-motion'
+import { Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, message, Card } from 'antd'
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, PhoneOutlined, MailOutlined, BankOutlined } from '@ant-design/icons'
+import { motion, AnimatePresence } from 'framer-motion'
 import api from '../api'
+import useIsMobile from '../hooks/useIsMobile'
 
-const { Title } = Typography
-const { Search } = AntInput
+const { Title, Text } = Typography
+const { Search } = Input
 
 const statusColors = { lead: 'blue', active: 'green', churned: 'red' }
+
+function CustomerCard({ customer, onEdit, onDelete }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Card
+        style={{
+          borderRadius: 12,
+          marginBottom: 8,
+        }}
+        styles={{ body: { padding: '12px 16px' } }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <Text strong style={{ fontSize: 15 }}>{customer.name}</Text>
+              <Tag color={statusColors[customer.status]} style={{ fontSize: 10, lineHeight: '16px', padding: '0 4px' }}>
+                {customer.status?.toUpperCase()}
+              </Tag>
+            </div>
+            {customer.company && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#64748b', fontSize: 12, marginBottom: 2 }}>
+                <BankOutlined style={{ fontSize: 11 }} />
+                <span>{customer.company}</span>
+              </div>
+            )}
+            {customer.email && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#64748b', fontSize: 12, marginBottom: 2 }}>
+                <MailOutlined style={{ fontSize: 11 }} />
+                <span>{customer.email}</span>
+              </div>
+            )}
+            {customer.phone && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#64748b', fontSize: 12 }}>
+                <PhoneOutlined style={{ fontSize: 11 }} />
+                <span>{customer.phone}</span>
+              </div>
+            )}
+          </div>
+          <Space size={4}>
+            <Button type="text" icon={<EditOutlined />} size="small" onClick={() => onEdit(customer)} />
+            <Button type="text" icon={<DeleteOutlined />} size="small" danger onClick={() => onDelete(customer.id)} />
+          </Space>
+        </div>
+      </Card>
+    </motion.div>
+  )
+}
 
 export default function Customers() {
   const [customers, setCustomers] = useState([])
@@ -17,6 +70,7 @@ export default function Customers() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [form] = Form.useForm()
+  const isMobile = useIsMobile()
 
   const fetchCustomers = async () => {
     setLoading(true)
@@ -56,7 +110,7 @@ export default function Customers() {
     { title: 'Name', dataIndex: 'name', key: 'name', render: (t) => <strong>{t}</strong> },
     { title: 'Email', dataIndex: 'email', key: 'email', render: (t) => t || '—' },
     { title: 'Company', dataIndex: 'company', key: 'company', render: (t) => t || '—' },
-    { title: 'Phone', dataIndex: 'phone', key: 'phone', render: (t) => t || '—' },
+    { title: 'Phone', dataIndex: 'phone', key: 'phone', render: (t) => t || '—', responsive: ['md'] },
     {
       title: 'Status', dataIndex: 'status', key: 'status',
       render: (s) => <Tag color={statusColors[s]}>{s?.toUpperCase()}</Tag>
@@ -74,31 +128,66 @@ export default function Customers() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <Title level={3} style={{ margin: 0 }}>Customers</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Add Customer</Button>
+      <div className="page-header-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? 12 : 20 }}>
+        <Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>Customers</Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate} block={isMobile}>
+          {isMobile ? 'Add' : 'Add Customer'}
+        </Button>
       </div>
 
-      <Card style={{ borderRadius: 12, marginBottom: 16 }}>
-        <Space wrap>
-          <Search placeholder="Search customers..." allowClear onSearch={setSearch} style={{ width: 260 }} />
-          <Select value={statusFilter} onChange={setStatusFilter} style={{ width: 140 }} placeholder="All Status" allowClear>
+      <Card style={{ borderRadius: 12, marginBottom: isMobile ? 8 : 16 }}>
+        <div className="filter-row" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row' }}>
+          <Search
+            placeholder="Search customers..."
+            allowClear
+            onSearch={setSearch}
+            style={{ flex: 1, minWidth: isMobile ? '100%' : 200 }}
+            size={isMobile ? 'middle' : 'middle'}
+          />
+          <Select
+            value={statusFilter}
+            onChange={setStatusFilter}
+            style={{ width: isMobile ? '100%' : 140 }}
+            placeholder="All Status"
+            allowClear
+            size={isMobile ? 'middle' : 'middle'}
+          >
             <Select.Option value="lead">Lead</Select.Option>
             <Select.Option value="active">Active</Select.Option>
             <Select.Option value="churned">Churned</Select.Option>
           </Select>
-        </Space>
+        </div>
       </Card>
 
-      <Card style={{ borderRadius: 12 }}>
-        <Table
-          columns={columns}
-          dataSource={customers}
-          rowKey="id"
-          loading={loading}
-          pagination={{ pageSize: 10 }}
-        />
-      </Card>
+      {isMobile ? (
+        <div>
+          <AnimatePresence>
+            {customers.map((c) => (
+              <CustomerCard
+                key={c.id}
+                customer={c}
+                onEdit={openEdit}
+                onDelete={handleDelete}
+              />
+            ))}
+          </AnimatePresence>
+          {customers.length === 0 && !loading && (
+            <Card style={{ borderRadius: 12, textAlign: 'center', padding: '40px 0' }}>
+              <Text type="secondary">No customers found</Text>
+            </Card>
+          )}
+        </div>
+      ) : (
+        <Card style={{ borderRadius: 12 }}>
+          <Table
+            columns={columns}
+            dataSource={customers}
+            rowKey="id"
+            loading={loading}
+            pagination={{ pageSize: 10 }}
+          />
+        </Card>
+      )}
 
       <Modal
         title={editing ? 'Edit Customer' : 'Add Customer'}
@@ -106,6 +195,8 @@ export default function Customers() {
         onCancel={() => setModal(false)}
         onOk={() => form.submit()}
         okText={editing ? 'Update' : 'Create'}
+        width={isMobile ? '95%' : 520}
+        styles={{ body: { maxHeight: isMobile ? '60vh' : undefined, overflowY: 'auto' } }}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit} initialValues={{ status: 'lead' }}>
           <Form.Item name="name" label="Name" rules={[{ required: true }]}>

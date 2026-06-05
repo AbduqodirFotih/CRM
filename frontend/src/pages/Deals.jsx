@@ -1,12 +1,51 @@
 import React, { useState, useEffect } from 'react'
 import { Table, Button, Modal, Form, Input, InputNumber, Select, Tag, Space, Typography, message, Card } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
-import { motion } from 'framer-motion'
+import { PlusOutlined, EditOutlined, DeleteOutlined, DollarOutlined } from '@ant-design/icons'
+import { motion, AnimatePresence } from 'framer-motion'
 import api from '../api'
+import useIsMobile from '../hooks/useIsMobile'
 
-const { Title } = Typography
+const { Title, Text } = Typography
 
 const stageColors = { new: 'blue', qualified: 'purple', proposal: 'orange', won: 'green', lost: 'red' }
+
+function DealCard({ deal, customerName, onEdit, onDelete }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Card
+        style={{ borderRadius: 12, marginBottom: 8 }}
+        styles={{ body: { padding: '12px 16px' } }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <Text strong style={{ fontSize: 15 }}>{deal.title}</Text>
+              <Tag color={stageColors[deal.stage]} style={{ fontSize: 10, lineHeight: '16px', padding: '0 4px' }}>
+                {deal.stage?.toUpperCase()}
+              </Tag>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#7c3aed', fontSize: 14, fontWeight: 600, marginBottom: 2 }}>
+              <DollarOutlined />
+              <span>{Number(deal.value).toLocaleString()}</span>
+            </div>
+            <div style={{ color: '#64748b', fontSize: 12 }}>
+              {customerName}
+            </div>
+          </div>
+          <Space size={4}>
+            <Button type="text" icon={<EditOutlined />} size="small" onClick={() => onEdit(deal)} />
+            <Button type="text" icon={<DeleteOutlined />} size="small" danger onClick={() => onDelete(deal.id)} />
+          </Space>
+        </div>
+      </Card>
+    </motion.div>
+  )
+}
 
 export default function Deals() {
   const [deals, setDeals] = useState([])
@@ -16,6 +55,7 @@ export default function Deals() {
   const [editing, setEditing] = useState(null)
   const [stageFilter, setStageFilter] = useState('')
   const [form] = Form.useForm()
+  const isMobile = useIsMobile()
 
   const fetchDeals = async () => {
     setLoading(true)
@@ -81,13 +121,22 @@ export default function Deals() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <Title level={3} style={{ margin: 0 }}>Deals</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Add Deal</Button>
+      <div className="page-header-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? 12 : 20 }}>
+        <Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>Deals</Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate} block={isMobile}>
+          {isMobile ? 'Add' : 'Add Deal'}
+        </Button>
       </div>
 
-      <Card style={{ borderRadius: 12, marginBottom: 16 }}>
-        <Select value={stageFilter} onChange={setStageFilter} style={{ width: 160 }} placeholder="All Stages" allowClear>
+      <Card style={{ borderRadius: 12, marginBottom: isMobile ? 8 : 16 }}>
+        <Select
+          value={stageFilter}
+          onChange={setStageFilter}
+          style={{ width: isMobile ? '100%' : 160 }}
+          placeholder="All Stages"
+          allowClear
+          size={isMobile ? 'middle' : 'middle'}
+        >
           <Select.Option value="new">New</Select.Option>
           <Select.Option value="qualified">Qualified</Select.Option>
           <Select.Option value="proposal">Proposal</Select.Option>
@@ -96,15 +145,36 @@ export default function Deals() {
         </Select>
       </Card>
 
-      <Card style={{ borderRadius: 12 }}>
-        <Table
-          columns={columns}
-          dataSource={deals}
-          rowKey="id"
-          loading={loading}
-          pagination={{ pageSize: 10 }}
-        />
-      </Card>
+      {isMobile ? (
+        <div>
+          <AnimatePresence>
+            {deals.map((d) => (
+              <DealCard
+                key={d.id}
+                deal={d}
+                customerName={getCustomerName(d.customer_id)}
+                onEdit={openEdit}
+                onDelete={handleDelete}
+              />
+            ))}
+          </AnimatePresence>
+          {deals.length === 0 && !loading && (
+            <Card style={{ borderRadius: 12, textAlign: 'center', padding: '40px 0' }}>
+              <Text type="secondary">No deals found</Text>
+            </Card>
+          )}
+        </div>
+      ) : (
+        <Card style={{ borderRadius: 12 }}>
+          <Table
+            columns={columns}
+            dataSource={deals}
+            rowKey="id"
+            loading={loading}
+            pagination={{ pageSize: 10 }}
+          />
+        </Card>
+      )}
 
       <Modal
         title={editing ? 'Edit Deal' : 'Add Deal'}
@@ -112,6 +182,8 @@ export default function Deals() {
         onCancel={() => setModal(false)}
         onOk={() => form.submit()}
         okText={editing ? 'Update' : 'Create'}
+        width={isMobile ? '95%' : 520}
+        styles={{ body: { maxHeight: isMobile ? '60vh' : undefined, overflowY: 'auto' } }}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit} initialValues={{ stage: 'new', value: 0 }}>
           <Form.Item name="title" label="Title" rules={[{ required: true }]}>

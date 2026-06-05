@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Line, Column, Pie } from '@ant-design/charts'
 import api from '../api'
 import useThemeStore from '../store/themeStore'
+import useIsMobile from '../hooks/useIsMobile'
 
 const { Title } = Typography
 
@@ -20,7 +21,6 @@ function generateYearData() {
     date.setDate(date.getDate() - i)
     const dateStr = date.toISOString().split('T')[0]
     const month = date.getMonth()
-    // seasonal factor — more activity in Q1 and Q4
     const seasonFactor = (month >= 9 || month <= 2) ? 1.4 : 1.0
     data.push({
       date: dateStr,
@@ -63,7 +63,6 @@ function aggregateData(raw, period) {
     })
     return Object.values(months)
   }
-  // yearly — show all as one total
   const total = raw.reduce(
     (acc, d) => ({
       date: 'Year Total',
@@ -86,6 +85,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null)
   const [period, setPeriod] = useState('monthly')
   const darkMode = useThemeStore((s) => s.darkMode)
+  const isMobile = useIsMobile()
   const rawData = useMemo(() => generateYearData(), [])
   const chartData = useMemo(() => aggregateData(rawData, period), [rawData, period])
 
@@ -93,7 +93,6 @@ export default function Dashboard() {
     api.get('/api/dashboard').then((r) => setStats(r.data)).catch(() => {})
   }, [])
 
-  // Stat card values depend on the selected period
   const periodTotals = useMemo(() => {
     return chartData.reduce(
       (acc, d) => ({
@@ -106,7 +105,6 @@ export default function Dashboard() {
     )
   }, [chartData])
 
-  // Previous period for comparison
   const prevPeriodTotals = useMemo(() => {
     let prevData = []
     if (period === 'daily') prevData = rawData.slice(-60, -30)
@@ -158,6 +156,7 @@ export default function Dashboard() {
     smooth: true,
     animation: { appear: { type: 'wave-in', duration: 1200 } },
     theme: darkMode ? 'classicDark' : 'classic',
+    xAxis: isMobile ? { label: { autoRotate: false, style: { fontSize: 10 } } } : {},
   }
 
   const columnConfig = {
@@ -167,6 +166,7 @@ export default function Dashboard() {
     color: '#7c3aed',
     animation: { appear: { type: 'grow-in-y', duration: 1000 } },
     theme: darkMode ? 'classicDark' : 'classic',
+    xAxis: isMobile ? { label: { autoRotate: false, style: { fontSize: 10 } } } : {},
   }
 
   const pieData = stats ? [
@@ -191,33 +191,34 @@ export default function Dashboard() {
     innerRadius: 0.6,
     animation: { appear: { type: 'wave-in', duration: 1000 } },
     theme: darkMode ? 'classicDark' : 'classic',
-    label: { text: 'type', position: 'outside' },
+    label: { text: 'type', position: isMobile ? 'outside' : 'outside' },
   }
 
   const periodLabel = { daily: 'Last 30 Days', weekly: 'Last 12 Weeks', monthly: 'Last 12 Months', yearly: 'Full Year' }
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div className="page-header-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? 16 : 24 }}>
         <div>
-          <Title level={3} style={{ margin: 0 }}>Dashboard</Title>
-          <span style={{ color: '#64748b', fontSize: 13 }}>{periodLabel[period]}</span>
+          <Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>Dashboard</Title>
+          <span style={{ color: '#64748b', fontSize: isMobile ? 12 : 13 }}>{periodLabel[period]}</span>
         </div>
         <Segmented
           options={[
-            { label: 'Daily', value: 'daily' },
-            { label: 'Weekly', value: 'weekly' },
-            { label: 'Monthly', value: 'monthly' },
-            { label: 'Yearly', value: 'yearly' },
+            { label: 'Day', value: 'daily' },
+            { label: 'Week', value: 'weekly' },
+            { label: 'Month', value: 'monthly' },
+            { label: 'Year', value: 'yearly' },
           ]}
           value={period}
           onChange={setPeriod}
+          size={isMobile ? 'small' : 'middle'}
         />
       </div>
 
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+      <Row gutter={isMobile ? [8, 8] : [16, 16]} style={{ marginBottom: isMobile ? 12 : 24 }}>
         {statCards.map((card, i) => (
-          <Col xs={24} sm={12} lg={6} key={card.title}>
+          <Col xs={12} sm={12} lg={6} key={card.title}>
             <motion.div custom={i} initial="hidden" animate="visible" variants={statCardVariant} key={period + card.title}>
               <Card hoverable style={{ borderRadius: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -225,13 +226,23 @@ export default function Dashboard() {
                     title={card.title}
                     value={card.value}
                     prefix={card.prefix}
-                    valueStyle={{ color: card.color, fontWeight: 700 }}
+                    valueStyle={{ color: card.color, fontWeight: 700, fontSize: isMobile ? 20 : 24 }}
                   />
-                  <div style={{ width: 48, height: 48, borderRadius: 12, background: `${card.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, color: card.color }}>
+                  <div style={{
+                    width: isMobile ? 36 : 48,
+                    height: isMobile ? 36 : 48,
+                    borderRadius: isMobile ? 8 : 12,
+                    background: `${card.color}15`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: isMobile ? 18 : 22,
+                    color: card.color,
+                  }}>
                     {card.icon}
                   </div>
                 </div>
-                <Tag color={card.up ? 'green' : 'red'} style={{ marginTop: 8 }}>
+                <Tag color={card.up ? 'green' : 'red'} style={{ marginTop: 8, fontSize: isMobile ? 11 : 12 }}>
                   {card.up ? <ArrowUpOutlined /> : <ArrowDownOutlined />} {card.text}
                 </Tag>
               </Card>
@@ -240,28 +251,28 @@ export default function Dashboard() {
         ))}
       </Row>
 
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+      <Row gutter={isMobile ? [8, 8] : [16, 16]} style={{ marginBottom: isMobile ? 12 : 24 }}>
         <Col xs={24} lg={16}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
             <Card title="Customer Growth" style={{ borderRadius: 12 }}>
-              <Line {...lineConfig} height={280} key={period + 'line'} />
+              <Line {...lineConfig} height={isMobile ? 200 : 280} key={period + 'line'} />
             </Card>
           </motion.div>
         </Col>
         <Col xs={24} lg={8}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
             <Card title="Deals Pipeline" style={{ borderRadius: 12 }}>
-              <Pie {...pieConfig} height={280} />
+              <Pie {...pieConfig} height={isMobile ? 200 : 280} />
             </Card>
           </motion.div>
         </Col>
       </Row>
 
-      <Row gutter={[16, 16]}>
+      <Row gutter={isMobile ? [8, 8] : [16, 16]}>
         <Col xs={24}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
             <Card title="Revenue Trend" style={{ borderRadius: 12 }}>
-              <Column {...columnConfig} height={250} key={period + 'col'} />
+              <Column {...columnConfig} height={isMobile ? 200 : 250} key={period + 'col'} />
             </Card>
           </motion.div>
         </Col>

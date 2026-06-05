@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react'
-import { Card, Row, Col, Typography, Tabs, Tag, Timeline, Steps, Collapse, Badge, Descriptions, Space } from 'antd'
+import React, { useState } from 'react'
+import { Card, Row, Col, Typography, Tabs, Tag, Timeline, Steps, Collapse, Descriptions, Space } from 'antd'
 import {
   CloudServerOutlined, GlobalOutlined, DatabaseOutlined, SafetyCertificateOutlined,
   DeploymentUnitOutlined, BranchesOutlined, GithubOutlined, CheckCircleOutlined,
@@ -9,30 +9,22 @@ import { motion } from 'framer-motion'
 import ReactFlow, { Background, Controls, MiniMap, MarkerType, Position } from 'reactflow'
 import 'reactflow/dist/style.css'
 import useThemeStore from '../store/themeStore'
+import useIsMobile from '../hooks/useIsMobile'
 
 const { Title, Text, Paragraph } = Typography
 
 // ===== AWS NETWORK ARCHITECTURE DIAGRAM =====
 const awsNodes = [
-  // VPC
   { id: 'vpc', position: { x: 50, y: 50 }, data: { label: '☁️ VPC 10.0.0.0/16' }, style: { width: 750, height: 500, background: 'rgba(37,99,235,0.05)', border: '2px dashed #2563EB', borderRadius: 12 }, type: 'group' },
-  // Public Subnet
   { id: 'public-subnet', position: { x: 20, y: 60 }, data: { label: '🌐 Public Subnet (10.0.1.0/24)' }, parentNode: 'vpc', style: { width: 340, height: 400, background: 'rgba(5,150,105,0.05)', border: '1px solid #059669', borderRadius: 8 }, type: 'group' },
-  // Private Subnet
   { id: 'private-subnet', position: { x: 390, y: 60 }, data: { label: '🔒 Private Subnet (10.0.2.0/24)' }, parentNode: 'vpc', style: { width: 340, height: 400, background: 'rgba(220,38,38,0.05)', border: '1px solid #DC2626', borderRadius: 8 }, type: 'group' },
-  // Internet Gateway
   { id: 'igw', position: { x: 300, y: -80 }, data: { label: '🌍 Internet Gateway' }, style: { background: '#dbeafe', border: '2px solid #2563EB', borderRadius: 8, padding: '10px 16px', fontWeight: 600 } },
-  // ALB
   { id: 'alb', position: { x: 60, y: 80 }, data: { label: '⚖️ Application Load Balancer (Nginx)' }, parentNode: 'public-subnet', style: { background: '#dcfce7', border: '2px solid #059669', borderRadius: 8, padding: '10px 14px', fontWeight: 600, width: 220 } },
-  // NAT Gateway
   { id: 'nat', position: { x: 60, y: 220 }, data: { label: '🔄 NAT Gateway' }, parentNode: 'public-subnet', style: { background: '#fef3c7', border: '2px solid #d97706', borderRadius: 8, padding: '10px 16px', fontWeight: 600 } },
-  // EC2 instances
   { id: 'api1', position: { x: 40, y: 80 }, data: { label: '🖥️ API Instance 1' }, parentNode: 'private-subnet', style: { background: '#ede9fe', border: '1px solid #7c3aed', borderRadius: 8, padding: '8px 12px' } },
   { id: 'api2', position: { x: 40, y: 150 }, data: { label: '🖥️ API Instance 2' }, parentNode: 'private-subnet', style: { background: '#ede9fe', border: '1px solid #7c3aed', borderRadius: 8, padding: '8px 12px' } },
   { id: 'api3', position: { x: 40, y: 220 }, data: { label: '🖥️ API Instance 3' }, parentNode: 'private-subnet', style: { background: '#ede9fe', border: '1px solid #7c3aed', borderRadius: 8, padding: '8px 12px' } },
-  // RDS
   { id: 'rds', position: { x: 80, y: 310 }, data: { label: '🗄️ RDS PostgreSQL' }, parentNode: 'private-subnet', style: { background: '#fff7ed', border: '2px solid #ea580c', borderRadius: 8, padding: '10px 14px', fontWeight: 600 } },
-  // Users
   { id: 'users', position: { x: 300, y: -160 }, data: { label: '👥 Users / Internet' }, style: { background: '#f1f5f9', border: '2px solid #64748b', borderRadius: 8, padding: '10px 16px', fontWeight: 600 } },
 ]
 
@@ -93,30 +85,32 @@ const dockerEdges = [
 
 export default function CloudArchitecture() {
   const darkMode = useThemeStore((s) => s.darkMode)
+  const isMobile = useIsMobile()
 
   const tabItems = [
     {
       key: 'aws',
-      label: <span><CloudOutlined /> AWS Network</span>,
+      label: <span><CloudOutlined /> {isMobile ? 'AWS' : 'AWS Network'}</span>,
       children: (
         <Card style={{ borderRadius: 12 }}>
-          <Title level={5}>AWS VPC Network Architecture</Title>
-          <Paragraph type="secondary">Multi-AZ deployment with public/private subnets, ALB, and RDS.</Paragraph>
-          <div style={{ height: 550, border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden' }}>
+          <Title level={isMobile ? 5 : 5}>AWS VPC Network Architecture</Title>
+          <Paragraph type="secondary" style={{ fontSize: isMobile ? 12 : 14 }}>Multi-AZ deployment with public/private subnets, ALB, and RDS.</Paragraph>
+          <div style={{ height: isMobile ? 350 : 550, border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden' }}>
             <ReactFlow
               nodes={awsNodes}
               edges={awsEdges}
               fitView
               attributionPosition="bottom-left"
+              minZoom={isMobile ? 0.3 : 0.5}
             >
               <Background gap={20} color={darkMode ? '#333' : '#f0f0f0'} />
               <Controls />
-              <MiniMap />
+              {!isMobile && <MiniMap />}
             </ReactFlow>
           </div>
-          <Row gutter={16} style={{ marginTop: 16 }}>
-            <Col span={8}>
-              <Card size="small" style={{ borderRadius: 8 }}>
+          <Row gutter={isMobile ? 8 : 16} style={{ marginTop: 16 }}>
+            <Col xs={24} sm={8}>
+              <Card size="small" style={{ borderRadius: 8, marginBottom: isMobile ? 8 : 0 }}>
                 <Descriptions column={1} size="small">
                   <Descriptions.Item label="Region">eu-west-1 (Ireland)</Descriptions.Item>
                   <Descriptions.Item label="VPC CIDR">10.0.0.0/16</Descriptions.Item>
@@ -125,8 +119,8 @@ export default function CloudArchitecture() {
                 </Descriptions>
               </Card>
             </Col>
-            <Col span={8}>
-              <Card size="small" style={{ borderRadius: 8 }}>
+            <Col xs={24} sm={8}>
+              <Card size="small" style={{ borderRadius: 8, marginBottom: isMobile ? 8 : 0 }}>
                 <Descriptions column={1} size="small">
                   <Descriptions.Item label="Instance Type">t3.micro</Descriptions.Item>
                   <Descriptions.Item label="OS">Ubuntu 22.04 LTS</Descriptions.Item>
@@ -135,7 +129,7 @@ export default function CloudArchitecture() {
                 </Descriptions>
               </Card>
             </Col>
-            <Col span={8}>
+            <Col xs={24} sm={8}>
               <Card size="small" style={{ borderRadius: 8 }}>
                 <Descriptions column={1} size="small">
                   <Descriptions.Item label="DB Engine">PostgreSQL 16</Descriptions.Item>
@@ -151,59 +145,60 @@ export default function CloudArchitecture() {
     },
     {
       key: 'cicd',
-      label: <span><RocketOutlined /> CI/CD Pipeline</span>,
+      label: <span><RocketOutlined /> {isMobile ? 'CI/CD' : 'CI/CD Pipeline'}</span>,
       children: (
         <Card style={{ borderRadius: 12 }}>
           <Title level={5}>Continuous Integration & Deployment Pipeline</Title>
-          <Paragraph type="secondary">Automated build, test, and deploy on every push to main branch.</Paragraph>
-          <div style={{ height: 400, border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden' }}>
+          <Paragraph type="secondary" style={{ fontSize: isMobile ? 12 : 14 }}>Automated build, test, and deploy on every push to main branch.</Paragraph>
+          <div style={{ height: isMobile ? 280 : 400, border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden' }}>
             <ReactFlow
               nodes={cicdNodes}
               edges={cicdEdges}
               fitView
               attributionPosition="bottom-left"
+              minZoom={isMobile ? 0.2 : 0.5}
             >
               <Background gap={20} color={darkMode ? '#333' : '#f0f0f0'} />
               <Controls />
             </ReactFlow>
           </div>
-          <Row gutter={16} style={{ marginTop: 16 }}>
-            <Col span={24}>
-              <Steps
-                current={6}
-                size="small"
-                items={[
-                  { title: 'Push', description: 'Developer pushes to main' },
-                  { title: 'Trigger', description: 'GitHub Actions activated' },
-                  { title: 'Test', description: 'pytest + npm run build' },
-                  { title: 'Build', description: 'Docker images built' },
-                  { title: 'Push', description: 'Images → GHCR' },
-                  { title: 'Deploy', description: 'SSH → docker compose up' },
-                  { title: 'Live', description: 'Production updated' },
-                ]}
-              />
-            </Col>
-          </Row>
+          <div style={{ marginTop: 16, overflowX: 'auto' }}>
+            <Steps
+              current={6}
+              size={isMobile ? 'small' : 'small'}
+              direction={isMobile ? 'vertical' : 'horizontal'}
+              items={[
+                { title: 'Push', description: 'Developer pushes to main' },
+                { title: 'Trigger', description: 'GitHub Actions activated' },
+                { title: 'Test', description: 'pytest + npm run build' },
+                { title: 'Build', description: 'Docker images built' },
+                { title: 'Push', description: 'Images → GHCR' },
+                { title: 'Deploy', description: 'SSH → docker compose up' },
+                { title: 'Live', description: 'Production updated' },
+              ]}
+            />
+          </div>
         </Card>
       )
     },
     {
       key: 'docker',
-      label: <span><DeploymentUnitOutlined /> Docker Architecture</span>,
+      label: <span><DeploymentUnitOutlined /> {isMobile ? 'Docker' : 'Docker Architecture'}</span>,
       children: (
         <Card style={{ borderRadius: 12 }}>
           <Title level={5}>Docker Container Architecture</Title>
-          <Paragraph type="secondary">Multi-container setup with Nginx load balancer and scalable API instances.</Paragraph>
-          <div style={{ height: 500, border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden' }}>
+          <Paragraph type="secondary" style={{ fontSize: isMobile ? 12 : 14 }}>Multi-container setup with Nginx load balancer and scalable API instances.</Paragraph>
+          <div style={{ height: isMobile ? 300 : 500, border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden' }}>
             <ReactFlow
               nodes={dockerNodes}
               edges={dockerEdges}
               fitView
               attributionPosition="bottom-left"
+              minZoom={isMobile ? 0.2 : 0.5}
             >
               <Background gap={20} color={darkMode ? '#333' : '#f0f0f0'} />
               <Controls />
-              <MiniMap />
+              {!isMobile && <MiniMap />}
             </ReactFlow>
           </div>
           <Collapse
@@ -213,7 +208,7 @@ export default function CloudArchitecture() {
                 key: '1',
                 label: '📄 docker-compose.yml Configuration',
                 children: (
-                  <pre style={{ background: darkMode ? '#1a1a2e' : '#f8f9fa', padding: 16, borderRadius: 8, fontSize: 12, overflow: 'auto' }}>
+                  <pre style={{ background: darkMode ? '#1a1a2e' : '#f8f9fa', padding: isMobile ? 10 : 16, borderRadius: 8, fontSize: isMobile ? 10 : 12, overflow: 'auto' }}>
 {`services:
   db:
     image: postgres:16-alpine
@@ -241,7 +236,7 @@ networks:
                 key: '2',
                 label: '🔒 Security Configuration',
                 children: (
-                  <Space direction="vertical" size="small">
+                  <Space direction="vertical" size="small" wrap>
                     <Tag color="green">JWT Authentication (HS256)</Tag>
                     <Tag color="blue">bcrypt Password Hashing</Tag>
                     <Tag color="purple">Private Network Isolation</Tag>
@@ -261,8 +256,8 @@ networks:
       children: (
         <Card style={{ borderRadius: 12 }}>
           <Title level={5}>Security Architecture</Title>
-          <Row gutter={[16, 16]}>
-            <Col span={12}>
+          <Row gutter={isMobile ? [8, 8] : [16, 16]}>
+            <Col xs={24} sm={12}>
               <Card title="🔐 Authentication & Authorization" size="small" style={{ borderRadius: 8 }}>
                 <Timeline
                   items={[
@@ -274,7 +269,7 @@ networks:
                 />
               </Card>
             </Col>
-            <Col span={12}>
+            <Col xs={24} sm={12}>
               <Card title="🛡️ Network Security" size="small" style={{ borderRadius: 8 }}>
                 <Timeline
                   items={[
@@ -286,7 +281,7 @@ networks:
                 />
               </Card>
             </Col>
-            <Col span={12}>
+            <Col xs={24} sm={12}>
               <Card title="📡 Data Protection" size="small" style={{ borderRadius: 8 }}>
                 <Timeline
                   items={[
@@ -298,7 +293,7 @@ networks:
                 />
               </Card>
             </Col>
-            <Col span={12}>
+            <Col xs={24} sm={12}>
               <Card title="🏗️ Infrastructure Security" size="small" style={{ borderRadius: 8 }}>
                 <Timeline
                   items={[
@@ -318,11 +313,11 @@ networks:
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <div style={{ marginBottom: 24 }}>
-        <Title level={3} style={{ margin: 0 }}>Cloud Architecture</Title>
-        <Text type="secondary">AWS infrastructure, CI/CD pipeline, and Docker container architecture</Text>
+      <div style={{ marginBottom: isMobile ? 12 : 24 }}>
+        <Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>Cloud Architecture</Title>
+        <Text type="secondary" style={{ fontSize: isMobile ? 12 : 14 }}>AWS infrastructure, CI/CD pipeline, and Docker container architecture</Text>
       </div>
-      <Tabs items={tabItems} size="large" />
+      <Tabs items={tabItems} size={isMobile ? 'middle' : 'large'} />
     </motion.div>
   )
 }
