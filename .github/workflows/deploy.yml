@@ -59,7 +59,7 @@ jobs:
           script: |
             cd /opt/crm
 
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u abduqodirfotih --password-stdin
 
             printf 'IMAGE_PREFIX=%s\nSECRET_KEY=%s\nDB_PASSWORD=%s\n' \
               "${{ env.IMAGE_PREFIX }}" \
