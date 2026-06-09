@@ -39,6 +39,7 @@ services:
     image: ${IMAGE_PREFIX}-nginx:latest
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - api
     mem_limit: 64m
