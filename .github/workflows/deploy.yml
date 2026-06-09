@@ -73,8 +73,13 @@ jobs:
               "${{ secrets.SECRET_KEY }}" \
               "${{ secrets.DB_PASSWORD }}" > .env
 
-            # ── Certbot uchun kerakli papkalar ────────────────────────────
-            mkdir -p /etc/letsencrypt /var/www/certbot
+            # ── Certbot uchun kerakli papkalar (sudo bilan) ───────────────
+            sudo mkdir -p /etc/letsencrypt /var/www/certbot
+            sudo chmod 755 /var/www/certbot
+            sudo chown -R root:root /etc/letsencrypt
+            # nginx container read-only o'qishi uchun
+            sudo chmod -R 755 /etc/letsencrypt/live 2>/dev/null || true
+            sudo chmod -R 755 /etc/letsencrypt/archive 2>/dev/null || true
 
             # ── Birinchi marta SSL sertifikat olish ───────────────────────
             if [ ! -f "/etc/letsencrypt/live/${{ env.DOMAIN }}/fullchain.pem" ]; then
@@ -99,7 +104,7 @@ jobs:
 
               sleep 2
 
-              docker run --rm \
+              sudo docker run --rm \
                 -v /etc/letsencrypt:/etc/letsencrypt \
                 -v /var/www/certbot:/var/www/certbot \
                 certbot/certbot certonly \
