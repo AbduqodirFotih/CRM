@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ghcr.io/abduqodirfotih/crm
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/crm
 
 jobs:
   build-and-push:
@@ -61,11 +61,10 @@ jobs:
 
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            cat > .env << 'ENVFILE'
-            IMAGE_PREFIX=${{ env.IMAGE_PREFIX }}
-            SECRET_KEY=${{ secrets.SECRET_KEY }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            ENVFILE
+            printf 'IMAGE_PREFIX=%s\nSECRET_KEY=%s\nDB_PASSWORD=%s\n' \
+              "${{ env.IMAGE_PREFIX }}" \
+              "${{ secrets.SECRET_KEY }}" \
+              "${{ secrets.DB_PASSWORD }}" > .env
 
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d --scale api=2
