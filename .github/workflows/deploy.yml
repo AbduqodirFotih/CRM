@@ -7,6 +7,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_PREFIX: ghcr.io/abduqodirfotih/crm
+  DOMAIN: crm.abduqodir-jamalov.uz
 
 jobs:
   build-and-push:
@@ -30,9 +31,11 @@ jobs:
           docker build -t ${{ env.IMAGE_PREFIX }}-api:latest ./backend
           docker push ${{ env.IMAGE_PREFIX }}-api:latest
 
-      - name: Build and push Nginx image
+      - name: Build and push Nginx image (prod — HTTPS)
         run: |
-          docker build -t ${{ env.IMAGE_PREFIX }}-nginx:latest -f nginx/Dockerfile .
+          docker build \
+            -t ${{ env.IMAGE_PREFIX }}-nginx:latest \
+            -f nginx/Dockerfile.prod .
           docker push ${{ env.IMAGE_PREFIX }}-nginx:latest
 
   deploy:
@@ -50,22 +53,69 @@ jobs:
           source: "docker-compose.prod.yml"
           target: "/opt/crm"
 
-      - name: Deploy to server
+      - name: Issue SSL cert (first-time) & deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            set -e
             cd /opt/crm
 
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u abduqodirfotih --password-stdin
+            # ── Docker registry login ──────────────────────────────────────
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io \
+              -u ${{ github.actor }} --password-stdin
 
+            # ── .env fayl ─────────────────────────────────────────────────
             printf 'IMAGE_PREFIX=%s\nSECRET_KEY=%s\nDB_PASSWORD=%s\n' \
               "${{ env.IMAGE_PREFIX }}" \
               "${{ secrets.SECRET_KEY }}" \
               "${{ secrets.DB_PASSWORD }}" > .env
 
-            sudo docker compose -f docker-compose.prod.yml pull
-            sudo docker compose -f docker-compose.prod.yml up -d --scale api=2
-            sudo docker image prune -f
+            # ── Certbot uchun kerakli papkalar ────────────────────────────
+            mkdir -p /etc/letsencrypt /var/www/certbot
+
+            # ── Birinchi marta SSL sertifikat olish ───────────────────────
+            if [ ! -f "/etc/letsencrypt/live/${{ env.DOMAIN }}/fullchain.pem" ]; then
+              echo ">>> SSL sertifikat olinmoqda: ${{ env.DOMAIN }}"
+
+              cat > /tmp/tmp-nginx.conf << 'NGINXEOF'
+            server {
+                listen 80;
+                server_name ${{ env.DOMAIN }};
+                location /.well-known/acme-challenge/ {
+                    root /var/www/certbot;
+                }
+                location / { return 200 "ok"; }
+            }
+            NGINXEOF
+
+              docker run --rm -d --name tmp-nginx \
+                -p 80:80 \
+                -v /var/www/certbot:/var/www/certbot \
+                -v /tmp/tmp-nginx.conf:/etc/nginx/conf.d/default.conf \
+                nginx:1.27-alpine
+
+              sleep 2
+
+              docker run --rm \
+                -v /etc/letsencrypt:/etc/letsencrypt \
+                -v /var/www/certbot:/var/www/certbot \
+                certbot/certbot certonly \
+                  --webroot \
+                  --webroot-path /var/www/certbot \
+                  --email admin@abduqodir-jamalov.uz \
+                  --agree-tos \
+                  --no-eff-email \
+                  -d ${{ env.DOMAIN }}
+
+              docker stop tmp-nginx
+            fi
+
+            # ── Produksion stack ishga tushirish ──────────────────────────
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans --scale api=2
+            docker image prune -f
+
+            echo "✅ Deploy muvaffaqiyatli: https://${{ env.DOMAIN }}"
