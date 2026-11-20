@@ -1,7 +1,7 @@
 [project]
 name = "crm-api"
 version = "0.1.0"
-requires-python = ">=3.11, <=3.12.9"
+requires-python = ">=3.11, <3.13"
 dependencies = [
     "fastapi>=0.111.0",
     "sqlalchemy>=2.0.30",
@@ -10,5 +10,6 @@ dependencies = [
     "passlib[bcrypt]>=1.7.4",
     "bcrypt>=4.0.1",
     "python-multipart>=0.0.9",
-    "pydantic[email-validator]>=2.9.0"
+    "pydantic>=2.9.0",
+    "email-validator>=2.0.0"
 ]
