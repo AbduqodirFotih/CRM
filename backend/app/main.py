@@ -190,6 +190,19 @@ def health():
     return {"status": "healthy", "instance_id": INSTANCE_ID}
 
 
+@app.get("/api/setup")
+def setup_database():
+    try:
+        Base.metadata.create_all(bind=engine)
+        db = SessionLocal()
+        seed_data(db)
+        db.close()
+        return {"status": "ok", "message": "Database tables created and seeded!"}
+    except Exception as e:
+        import traceback
+        return {"status": "error", "error": str(e), "traceback": traceback.format_exc()}
+
+
 app.include_router(auth.router)
 app.include_router(customers.router)
 app.include_router(deals.router)

@@ -28,7 +28,24 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == form_data.username).first()
+    try:
+        user = db.query(User).filter(User.email == form_data.username).first()
+    except Exception:
+        db.rollback()
+        from app.database import Base, engine
+        from app.main import seed_data
+        Base.metadata.create_all(bind=engine)
+        seed_data(db)
+        user = db.query(User).filter(User.email == form_data.username).first()
+
+    # Agar baza hali bo'sh bo'lsa va default admin kirayotgan bo'lsa
+    if not user and form_data.username == "admin@fotihcrm.uz" and form_data.password == "admin123":
+        from app.database import Base, engine
+        from app.main import seed_data
+        Base.metadata.create_all(bind=engine)
+        seed_data(db)
+        user = db.query(User).filter(User.email == form_data.username).first()
+
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
