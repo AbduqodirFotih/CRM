@@ -126,12 +126,15 @@ async def lifespan(app: FastAPI):
 
     try:
         Base.metadata.create_all(bind=engine)
-    except Exception:
-        pass  # tables already exist from another instance
+    except Exception as e:
+        print(f"Base.metadata.create_all warning: {e}")
 
-    db = SessionLocal()
-    seed_data(db)
-    db.close()
+    try:
+        db = SessionLocal()
+        seed_data(db)
+        db.close()
+    except Exception as e:
+        print(f"seed_data warning: {e}")
 
     # Start heartbeat thread (only in Docker, not serverless)
     if not IS_SERVERLESS:
