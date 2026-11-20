@@ -21,8 +21,11 @@ INSTANCE_ID = os.getenv("HOSTNAME", socket.gethostname())
 
 def seed_data(db: Session):
     """Seed demo data if DB is empty."""
-    existing = db.query(User).filter(User.email == "admin@fotihcrm.uz").first()
-    if existing:
+    admin = db.query(User).filter(User.email == "admin@fotihcrm.uz").first()
+    if admin:
+        # Parol xeshini to'g'irlash
+        admin.hashed_password = get_password_hash("admin123")
+        db.commit()
         return
 
     try:
