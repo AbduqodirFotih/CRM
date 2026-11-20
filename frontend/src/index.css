@@ -1,0 +1,104 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+/* ========== MOBILE RESPONSIVE ========== */
+
+@media (max-width: 768px) {
+  /* Responsive tables - horizontal scroll */
+  .ant-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Segment controls */
+  .ant-segmented {
+    font-size: 12px;
+  }
+
+  /* Tabs scroll */
+  .ant-tabs-nav {
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+
+  .ant-tabs-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Modal on mobile */
+  .ant-modal-wrap {
+    padding: 0;
+  }
+
+  .ant-modal {
+    top: 16px;
+    margin: 0 auto;
+    max-height: calc(100vh - 32px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .ant-modal-body {
+    max-height: calc(100vh - 160px);
+    overflow-y: auto;
+  }
+
+  /* Touch-friendly hit targets */
+  .ant-btn {
+    min-height: 36px;
+  }
+
+  .ant-menu-item {
+    min-height: 44px;
+    line-height: 44px;
+  }
+}
+
+/* Extra small phones */
+@media (max-width: 480px) {
+  .ant-segmented {
+    font-size: 11px;
+  }
+}
+
+/* Prevent pull-to-refresh on mobile */
+@media (max-width: 768px) {
+  body {
+    overscroll-behavior-y: contain;
+  }
+}
